@@ -1,11 +1,9 @@
-# TWRP device tree for Samsung Galaxy A13 (SM-A135x)
-
 ## Other Source 
 - [Kernel Source](https://github.com/VThang51/android_kernel_samsung_a13xx)
 - [Platform Source](https://github.com/VThang51/android_platform_samsung_a13)
 
 ## How To Build
-0. Se
+0. Setup Environment
 ```bash
 sudo apt update && sudo apt-get install git-core gnupg flex bison build-essential zip curl zlib1g-dev libc6-dev-i386 x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig repo python
 ```
