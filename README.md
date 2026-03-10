@@ -1,7 +1,4 @@
-_(Based on SM-A135F XXV Region firmware)_
-## Other Source 
-- [Kernel Source](https://github.com/VThang51/android_kernel_samsung_a13xx)
-- [Platform Source](https://github.com/VThang51/android_platform_samsung_a13)
+> **I recommend you use the official source from TWRP.**
 
 ## How To Build
 0. Setup Environment
