@@ -1,4 +1,4 @@
-> **I recommend you use the official source from TWRP.**
+> **I recommend you use the [official source](https://github.com/TeamWin/android_device_samsung_a13) from TWRP.**
 
 ## How To Build
 0. Setup Environment
