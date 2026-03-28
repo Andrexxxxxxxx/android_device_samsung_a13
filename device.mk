@@ -1,3 +1,4 @@
+PRODUCT_NAME: m13
 # Dynamic partitions
 PRODUCT_USE_DYNAMIC_PARTITIONS := true
 
