@@ -1,5 +1,5 @@
 # Platform
-DEVICE_CODENAME := a13
+DEVICE_CODENAME := m13          # ← Вот так!
 DEVICE_PATH := device/samsung/$(DEVICE_CODENAME)
 BOARD_VENDOR := samsung
 TARGET_BOARD_PLATFORM := universal3830
