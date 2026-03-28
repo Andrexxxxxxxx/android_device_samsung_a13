@@ -1,6 +1,17 @@
+# === HARDcoded PATHS FOR M13 ===
+DEVICE_CODENAME := m13
+DEVICE_PATH := device/samsung/m13
+
+# Kernel paths (исправлено: Image вместо Image.gz)
+TARGET_PREBUILT_KERNEL := device/samsung/m13/prebuilt/Image
+TARGET_PREBUILT_DTB := device/samsung/m13/prebuilt/dtb.img
+BOARD_PREBUILT_DTBOIMAGE := device/samsung/m13/prebuilt/dtbo.img
+BOARD_KERNEL_IMAGE_NAME := Image
+
+# Other paths
+TARGET_SPECIFIC_HEADER_PATH := device/samsung/m13/include
+
 # Platform
-DEVICE_CODENAME := m13          # ← Вот так!
-DEVICE_PATH := device/samsung/$(DEVICE_CODENAME)
 BOARD_VENDOR := samsung
 TARGET_BOARD_PLATFORM := universal3830
 TARGET_BOARD_PLATFORM_GPU := mali-g52
