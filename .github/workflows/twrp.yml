@@ -1,0 +1,78 @@
+name: TWRP Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      device:
+        description: 'Device Codename (e.g., m13, a13)'
+        required: true
+        default: 'm13'
+      dt_src:
+        description: 'Device Tree Repo (Owner/Repo)'
+        required: true
+        default: 'Andrexxxxxxxx/android_device_samsung_a13'
+      dt_branch:
+        description: 'Device Tree Branch'
+        required: true
+        default: 'master'
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        path: android_root
+
+    - name: Setup environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git gnupg flex bison gperf build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 libncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python3 bc ccache wget
+
+    - name: Setup repo tool
+      run: |
+        mkdir -p ~/.bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
+        chmod a+x ~/.bin/repo
+        echo "$HOME/.bin" >> $GITHUB_PATH
+
+    - name: Repo Init
+      working-directory: android_root
+      run: |
+        repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1
+
+    - name: Create Local Manifest
+      working-directory: android_root
+      run: |
+        mkdir -p .repo/local_manifests
+        DT_SRC="${{ github.event.inputs.dt_src }}"
+        DT_PATH="device/samsung/${{ github.event.inputs.device }}"
+        DT_BRANCH="${{ github.event.inputs.dt_branch }}"
+        echo '<?xml version="1.0" encoding="UTF-8"?>' > .repo/local_manifests/roomservice.xml
+        echo '<manifest>' >> .repo/local_manifests/roomservice.xml
+        echo "  <project name=\"${DT_SRC}\" path=\"${DT_PATH}\" remote=\"github\" revision=\"${DT_BRANCH}\" />" >> .repo/local_manifests/roomservice.xml
+        echo '</manifest>' >> .repo/local_manifests/roomservice.xml
+        cat .repo/local_manifests/roomservice.xml
+
+    - name: Repo Sync
+      working-directory: android_root
+      run: |
+        repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+
+    - name: Build TWRP
+      working-directory: android_root
+      run: |
+        export ALLOW_MISSING_DEPENDENCIES=true
+        source build/envsetup.sh
+        DEVICE="${{ github.event.inputs.device }}"
+        lunch_target="twrp_${DEVICE}-eng"
+        echo "Lunching target: ${lunch_target}"
+        lunch ${lunch_target}
+        mka recoveryimage -j$(nproc --all)
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: TWRP-${{ github.event.inputs.device }}-${{ github.run_id }}
+        path: android_root/out/target/product/${{ github.event.inputs.device }}/recovery.img
