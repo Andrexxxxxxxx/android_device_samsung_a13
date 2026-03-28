@@ -11,10 +11,10 @@ on:
         description: 'Device Tree Repo (Owner/Repo)'
         required: true
         default: 'Andrexxxxxxxx/android_device_samsung_a13'
-      dt_branch:
-        description: 'Device Tree Branch'
-        required: true
-        default: 'main'
+dt_branch:
+  description: 'Device Tree Branch'
+  required: true
+  default: 'twrp-12.1'  # ← Вот так
 
 jobs:
   build:
