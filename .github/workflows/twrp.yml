@@ -55,15 +55,23 @@ jobs:
         echo '</manifest>' >> .repo/local_manifests/roomservice.xml
         cat .repo/local_manifests/roomservice.xml
 
-     - name: Repo Sync (force clean)
+    - name: Repo Sync (force clean)
       working-directory: android_root
       run: |
-        # Полная очистка перед синхронизацией
+        echo "=== FORCING CLEAN SYNC ==="
+        
+        # Удаляем кэшированные проекты
         rm -rf .repo/projects/device/samsung/m13
+        rm -rf .repo/manifests
         rm -rf device/samsung/m13
         
-        # Синхронизация с флагами принудительного обновления
+        # Принудительная синхронизация
         repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags -d
+        
+        # Проверка, что файлы скачались
+        echo "=== Checking downloaded files ==="
+        ls -la device/samsung/m13/
+        ls -la device/samsung/m13/prebuilt/ 2>/dev/null || echo "prebuilt/ not found!"
 
     - name: Build TWRP
       working-directory: android_root
