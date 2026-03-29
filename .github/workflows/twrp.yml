@@ -60,18 +60,18 @@ jobs:
       run: |
         echo "=== FORCING CLEAN SYNC ==="
         
-        # Удаляем кэшированные проекты
-        rm -rf .repo/projects/device/samsung/m13
-        rm -rf .repo/manifests
+        # Удаляем ТОЛЬКО кэш конкретного устройства (не трогая .repo/manifests!)
+        rm -rf .repo/projects/device/samsung/m13.git
         rm -rf device/samsung/m13
         
         # Принудительная синхронизация
-        repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags -d
+        repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
         
         # Проверка, что файлы скачались
         echo "=== Checking downloaded files ==="
-        ls -la device/samsung/m13/
-        ls -la device/samsung/m13/prebuilt/ 2>/dev/null || echo "prebuilt/ not found!"
+        ls -la device/samsung/m13/ || echo "❌ device/samsung/m13/ not found!"
+        ls -la device/samsung/m13/prebuilt/ 2>/dev/null || echo "❌ prebuilt/ not found!"
+        cat device/samsung/m13/BoardConfig.mk 2>/dev/null | head -20 || echo "❌ Can't read BoardConfig.mk!"
 
     - name: Build TWRP
       working-directory: android_root
