@@ -55,10 +55,15 @@ jobs:
         echo '</manifest>' >> .repo/local_manifests/roomservice.xml
         cat .repo/local_manifests/roomservice.xml
 
-    - name: Repo Sync
+     - name: Repo Sync (force clean)
       working-directory: android_root
       run: |
-        repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+        # Полная очистка перед синхронизацией
+        rm -rf .repo/projects/device/samsung/m13
+        rm -rf device/samsung/m13
+        
+        # Синхронизация с флагами принудительного обновления
+        repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags -d
 
     - name: Build TWRP
       working-directory: android_root
