@@ -3,7 +3,7 @@ DEVICE_CODENAME := m13
 DEVICE_PATH := device/samsung/m13
 
 TARGET_PREBUILT_KERNEL := device/samsung/m13/prebuilt/Image
-TARGET_PREBUILT_DTB := device/samsung/m13/prebuilt/dtb.img
+# TARGET_PREBUILT_DTB := device/samsung/m13/prebuilt/dtb.img
 BOARD_PREBUILT_DTBOIMAGE := device/samsung/m13/prebuilt/dtbo.img
 BOARD_KERNEL_IMAGE_NAME := Image
 
