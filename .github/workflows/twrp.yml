@@ -73,23 +73,17 @@ jobs:
         ls -la device/samsung/m13/prebuilt/ 2>/dev/null || echo "❌ prebuilt/ not found!"
         cat device/samsung/m13/BoardConfig.mk 2>/dev/null | head -20 || echo "❌ Can't read BoardConfig.mk!"
 
-    - name: Download Stock Firmware Files
+    - name: Download Firmware Files
       working-directory: android_root
       run: |
-        echo "=== Downloading kernel and dtbo from stock firmware ==="
-        
-        # Создаём папку prebuilt если нет
+        echo "=== Downloading firmware files ==="
         mkdir -p device/samsung/m13/prebuilt
         
-        # Скачиваем файлы напрямую (замени ссылки на свои!)
-        # ВАЖНО: Найди прямые ссылки на файлы из своей прошивки
+        wget -q --show-progress -O device/samsung/m13/prebuilt/Image.gz "https://github.com/Andrexxxxxxxx/android_device_samsung_a13/releases/download/firmware-files-v1/Image.gz"
+        wget -q --show-progress -O device/samsung/m13/prebuilt/dtbo.img "https://github.com/Andrexxxxxxxx/android_device_samsung_a13/releases/download/firmware-files-v1/dtbo.img"
         
-        # Пример (замени URL на актуальные):
-        wget -O device/samsung/m13/prebuilt/Image.gz "https://drive.google.com/file/d/1QySs57T4v3BLIHmPd8mLFWUs5qL5KxIk/view?usp=sharing"
-        wget -O device/samsung/m13/prebuilt/dtbo.img "https://drive.google.com/file/d/1_suczpe7kOA8EtTrzluSwavj3XwiZ9OS/view?usp=drive_link"
-        
-        # Проверка
-        ls -la device/samsung/m13/prebuilt/
+        echo "=== Verification ==="
+        ls -lh device/samsung/m13/prebuilt/
 
     - name: Build TWRP
       working-directory: android_root
