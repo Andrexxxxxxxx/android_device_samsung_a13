@@ -55,6 +55,18 @@ jobs:
         echo '</manifest>' >> .repo/local_manifests/roomservice.xml
         cat .repo/local_manifests/roomservice.xml
 
+    - name: Download Firmware Files
+      working-directory: android_root
+      run: |
+        echo "=== Downloading firmware files ==="
+        mkdir -p device/samsung/m13/prebuilt
+        
+        wget -q --show-progress -O device/samsung/m13/prebuilt/Image.gz "https://github.com/Andrexxxxxxxx/android_device_samsung_a13/releases/download/v1.0/Image.gz"
+        wget -q --show-progress -O device/samsung/m13/prebuilt/dtbo.img "https://github.com/Andrexxxxxxxx/android_device_samsung_a13/releases/download/v1.0/dtbo.img"
+        
+        echo "=== Verification ==="
+        ls -lh device/samsung/m13/prebuilt/
+
     - name: Repo Sync (force clean)
       working-directory: android_root
       run: |
@@ -73,17 +85,6 @@ jobs:
         ls -la device/samsung/m13/prebuilt/ 2>/dev/null || echo "❌ prebuilt/ not found!"
         cat device/samsung/m13/BoardConfig.mk 2>/dev/null | head -20 || echo "❌ Can't read BoardConfig.mk!"
 
-    - name: Download Firmware Files
-      working-directory: android_root
-      run: |
-        echo "=== Downloading firmware files ==="
-        mkdir -p device/samsung/m13/prebuilt
-        
-        wget -q --show-progress -O device/samsung/m13/prebuilt/Image.gz "https://github.com/Andrexxxxxxxx/android_device_samsung_a13/releases/download/v1.0/Image.gz"
-        wget -q --show-progress -O device/samsung/m13/prebuilt/dtbo.img "https://github.com/Andrexxxxxxxx/android_device_samsung_a13/releases/download/v1.0/dtbo.img"
-        
-        echo "=== Verification ==="
-        ls -lh device/samsung/m13/prebuilt/
 
     - name: Build TWRP
       working-directory: android_root
