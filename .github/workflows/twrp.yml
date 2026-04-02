@@ -14,7 +14,7 @@ on:
       dt_branch:
         description: 'Device Tree Branch'
         required: true
-        default: 'twrp-12.1'  # ← ИЗМЕНИЛ НА twrp-12.1
+        default: 'twrp-12.1'
 
 jobs:
   build:
@@ -55,7 +55,7 @@ jobs:
           echo '</manifest>' >> .repo/local_manifests/roomservice.xml
           cat .repo/local_manifests/roomservice.xml
 
-      - name: Download Firmware Files (TO TEMP LOCATION)
+      - name: Download Firmware Files (TO TEMP!)
         working-directory: android_root
         run: |
           echo "=== Downloading firmware files to /tmp ==="
@@ -66,6 +66,21 @@ jobs:
           
           echo "=== Verification ==="
           ls -lh /tmp/firmware_files/
+          
+          IMAGE_SIZE=$(stat -c%s /tmp/firmware_files/Image.gz 2>/dev/null || echo 0)
+          DTBO_SIZE=$(stat -c%s /tmp/firmware_files/dtbo.img 2>/dev/null || echo 0)
+          
+          echo "Image.gz: $IMAGE_SIZE bytes"
+          echo "dtbo.img: $DTBO_SIZE bytes"
+          
+          if [ "$IMAGE_SIZE" -lt 1000000 ]; then
+              echo "ERROR: Image.gz too small!"
+              exit 1
+          fi
+          if [ "$DTBO_SIZE" -lt 1000000 ]; then
+              echo "ERROR: dtbo.img too small!"
+              exit 1
+          fi
 
       - name: Repo Sync (force clean)
         working-directory: android_root
@@ -74,11 +89,10 @@ jobs:
           rm -rf .repo/projects/device/samsung/m13.git
           rm -rf device/samsung/m13
           repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
-          
-          echo "=== Checking downloaded files ==="
-          ls -la device/samsung/m13/ || echo "❌ device/samsung/m13/ not found!"
+          echo "=== Sync complete ==="
+          ls -la device/samsung/m13/
 
-      - name: Copy Firmware Files to Prebuilt (AFTER SYNC!)
+      - name: Copy Firmware Files (AFTER SYNC!)
         working-directory: android_root
         run: |
           echo "=== Copying firmware files to prebuilt ==="
@@ -90,15 +104,21 @@ jobs:
           echo "=== Verification ==="
           ls -lh device/samsung/m13/prebuilt/
           
-          if [ ! -s device/samsung/m13/prebuilt/Image.gz ]; then
-              echo "ERROR: Image.gz is empty!"
+          IMAGE_SIZE=$(stat -c%s device/samsung/m13/prebuilt/Image.gz 2>/dev/null || echo 0)
+          DTBO_SIZE=$(stat -c%s device/samsung/m13/prebuilt/dtbo.img 2>/dev/null || echo 0)
+          
+          echo "Image.gz: $IMAGE_SIZE bytes"
+          echo "dtbo.img: $DTBO_SIZE bytes"
+          
+          if [ "$IMAGE_SIZE" -lt 1000000 ]; then
+              echo "ERROR: Image.gz empty after copy!"
               exit 1
           fi
-          if [ ! -s device/samsung/m13/prebuilt/dtbo.img ]; then
-              echo "ERROR: dtbo.img is empty!"
+          if [ "$DTBO_SIZE" -lt 1000000 ]; then
+              echo "ERROR: dtbo.img empty after copy!"
               exit 1
           fi
-          echo "=== All files present ==="
+          echo "=== All files OK ==="
 
       - name: Build TWRP
         working-directory: android_root
