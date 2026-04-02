@@ -55,7 +55,7 @@ jobs:
           echo '</manifest>' >> .repo/local_manifests/roomservice.xml
           cat .repo/local_manifests/roomservice.xml
 
-      - name: Download Firmware Files (TO TEMP!)
+      - name: Download Firmware Files (TO /tmp!)
         working-directory: android_root
         run: |
           echo "=== Downloading firmware files to /tmp ==="
@@ -81,6 +81,7 @@ jobs:
               echo "ERROR: dtbo.img too small!"
               exit 1
           fi
+          echo "=== Files OK ==="
 
       - name: Repo Sync (force clean)
         working-directory: android_root
