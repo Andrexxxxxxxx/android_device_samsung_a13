@@ -90,4 +90,50 @@ jobs:
           rm -rf .repo/projects/device/samsung/m13.git
           rm -rf device/samsung/m13
           repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
-         
+          echo "=== Sync complete ==="
+          ls -la device/samsung/m13/
+
+      - name: Copy Firmware Files (AFTER SYNC!)
+        working-directory: android_root
+        run: |
+          echo "=== Copying firmware files to prebuilt ==="
+          mkdir -p device/samsung/m13/prebuilt
+          
+          cp /tmp/firmware_files/Image.gz device/samsung/m13/prebuilt/Image.gz
+          cp /tmp/firmware_files/dtbo.img device/samsung/m13/prebuilt/dtbo.img
+          
+          echo "=== Verification ==="
+          ls -lh device/samsung/m13/prebuilt/
+          
+          IMAGE_SIZE=$(stat -c%s device/samsung/m13/prebuilt/Image.gz 2>/dev/null || echo 0)
+          DTBO_SIZE=$(stat -c%s device/samsung/m13/prebuilt/dtbo.img 2>/dev/null || echo 0)
+          
+          echo "Image.gz: $IMAGE_SIZE bytes"
+          echo "dtbo.img: $DTBO_SIZE bytes"
+          
+          if [ "$IMAGE_SIZE" -lt 1000000 ]; then
+              echo "ERROR: Image.gz empty after copy!"
+              exit 1
+          fi
+          if [ "$DTBO_SIZE" -lt 1000000 ]; then
+              echo "ERROR: dtbo.img empty after copy!"
+              exit 1
+          fi
+          echo "=== All files OK ==="
+
+      - name: Build TWRP
+        working-directory: android_root
+        run: |
+          export ALLOW_MISSING_DEPENDENCIES=true
+          source build/envsetup.sh
+          DEVICE="${{ github.event.inputs.device }}"
+          lunch_target="twrp_${DEVICE}-eng"
+          echo "Lunching target: ${lunch_target}"
+          lunch ${lunch_target}
+          mka recoveryimage -j$(nproc --all)
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TWRP-${{ github.event.inputs.device }}-${{ github.run_id }}
+          path: android_root/out/target/product/${{ github.event.inputs.device }}/recovery.img
