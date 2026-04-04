@@ -91,7 +91,6 @@ jobs:
           rm -rf device/samsung/m13
           repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
           echo "=== Sync complete ==="
-          ls -la device/samsung/m13/
 
       - name: Copy Firmware Files (AFTER SYNC!)
         working-directory: android_root
