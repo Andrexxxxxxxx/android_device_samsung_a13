@@ -1,1 +1,138 @@
-zopa
+name: TWRP Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      device:
+        description: 'Device Codename (e.g., m13, a13)'
+        required: true
+        default: 'm13'
+      dt_src:
+        description: 'Device Tree Repo (Owner/Repo)'
+        required: true
+        default: 'Andrexxxxxxxx/android_device_samsung_a13'
+      dt_branch:
+        description: 'Device Tree Branch'
+        required: true
+        default: 'twrp-12.1'
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: android_root
+
+      - name: Setup environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git gnupg flex bison gperf build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 libncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python3 bc ccache wget
+
+      - name: Setup repo tool
+        run: |
+          mkdir -p ~/.bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
+          chmod a+x ~/.bin/repo
+          echo "$HOME/.bin" >> $GITHUB_PATH
+
+      - name: Repo Init
+        working-directory: android_root
+        run: |
+          repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1
+
+      - name: Create Local Manifest
+        working-directory: android_root
+        run: |
+          mkdir -p .repo/local_manifests
+          DT_SRC="${{ github.event.inputs.dt_src }}"
+          DT_PATH="device/samsung/${{ github.event.inputs.device }}"
+          DT_BRANCH="${{ github.event.inputs.dt_branch }}"
+          echo '<?xml version="1.0" encoding="UTF-8"?>' > .repo/local_manifests/roomservice.xml
+          echo '<manifest>' >> .repo/local_manifests/roomservice.xml
+          echo "  <project name=\"${DT_SRC}\" path=\"${DT_PATH}\" remote=\"github\" revision=\"${DT_BRANCH}\" />" >> .repo/local_manifests/roomservice.xml
+          echo '</manifest>' >> .repo/local_manifests/roomservice.xml
+          cat .repo/local_manifests/roomservice.xml
+
+      - name: Download Firmware Files (TO /tmp!)
+        working-directory: android_root
+        run: |
+          echo "=== Downloading firmware files to /tmp ==="
+          mkdir -p /tmp/firmware_files
+          
+          wget -q --show-progress -O /tmp/firmware_files/Image.gz "https://github.com/Andrexxxxxxxx/android_device_samsung_a13/releases/download/v1.0/Image.gz"
+          wget -q --show-progress -O /tmp/firmware_files/dtbo.img "https://github.com/Andrexxxxxxxx/android_device_samsung_a13/releases/download/v1.0/dtbo.img"
+          
+          echo "=== Verification ==="
+          ls -lh /tmp/firmware_files/
+          
+          IMAGE_SIZE=$(stat -c%s /tmp/firmware_files/Image.gz 2>/dev/null || echo 0)
+          DTBO_SIZE=$(stat -c%s /tmp/firmware_files/dtbo.img 2>/dev/null || echo 0)
+          
+          echo "Image.gz: $IMAGE_SIZE bytes"
+          echo "dtbo.img: $DTBO_SIZE bytes"
+          
+          if [ "$IMAGE_SIZE" -lt 1000000 ]; then
+              echo "ERROR: Image.gz too small!"
+              exit 1
+          fi
+          if [ "$DTBO_SIZE" -lt 1000000 ]; then
+              echo "ERROR: dtbo.img too small!"
+              exit 1
+          fi
+          echo "=== Files OK ==="
+
+      - name: Repo Sync (force clean)
+        working-directory: android_root
+        run: |
+          echo "=== FORCING CLEAN SYNC ==="
+          rm -rf .repo/projects/device/samsung/m13.git
+          rm -rf device/samsung/m13
+          repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+          echo "=== Sync complete ==="
+
+      - name: Copy Firmware Files (AFTER SYNC!)
+        working-directory: android_root
+        run: |
+          echo "=== Copying firmware files to prebuilt ==="
+          mkdir -p device/samsung/m13/prebuilt
+          
+          cp /tmp/firmware_files/Image.gz device/samsung/m13/prebuilt/Image.gz
+          cp /tmp/firmware_files/dtbo.img device/samsung/m13/prebuilt/dtbo.img
+          
+          echo "=== Verification ==="
+          ls -lh device/samsung/m13/prebuilt/
+          
+          IMAGE_SIZE=$(stat -c%s device/samsung/m13/prebuilt/Image.gz 2>/dev/null || echo 0)
+          DTBO_SIZE=$(stat -c%s device/samsung/m13/prebuilt/dtbo.img 2>/dev/null || echo 0)
+          
+          echo "Image.gz: $IMAGE_SIZE bytes"
+          echo "dtbo.img: $DTBO_SIZE bytes"
+          
+          if [ "$IMAGE_SIZE" -lt 1000000 ]; then
+              echo "ERROR: Image.gz empty after copy!"
+              exit 1
+          fi
+          if [ "$DTBO_SIZE" -lt 1000000 ]; then
+              echo "ERROR: dtbo.img empty after copy!"
+              exit 1
+          fi
+          echo "=== All files OK ==="
+
+      - name: Build TWRP
+        working-directory: android_root
+        run: |
+          export ALLOW_MISSING_DEPENDENCIES=true
+          source build/envsetup.sh
+          DEVICE="${{ github.event.inputs.device }}"
+          lunch_target="twrp_${DEVICE}-eng"
+          echo "Lunching target: ${lunch_target}"
+          lunch ${lunch_target}
+          mka recoveryimage -j$(nproc --all)
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TWRP-${{ github.event.inputs.device }}-${{ github.run_id }}
+          path: android_root/out/target/product/${{ github.event.inputs.device }}/recovery.img
