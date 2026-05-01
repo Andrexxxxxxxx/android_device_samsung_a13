@@ -44,7 +44,14 @@ jobs:
           mkdir -p .repo/local_manifests
           echo '<?xml version="1.0" encoding="UTF-8"?><manifest><project name="Andrexxxxxxxx/android_device_samsung_a13" path="device/samsung/${{ github.event.inputs.device }}" remote="github" revision="${{ github.event.inputs.dt_branch }}" /></manifest>' > .repo/local_manifests/roomservice.xml
 
-      - name: Download Firmware (TO /tmp)
+       - name: Repo Sync
+        working-directory: android_root
+        run: |
+          rm -rf .repo/projects/device/samsung/${{ github.event.inputs.device }}.git
+          rm -rf device/samsung/${{ github.event.inputs.device }}
+          repo sync -c -j$(nproc) --force-sync --no-clone-bundle --no-tags
+
+     - name: Download Firmware (TO /tmp)
         working-directory: android_root
         run: |
           mkdir -p /tmp/fw
@@ -53,12 +60,6 @@ jobs:
           [ $(stat -c%s /tmp/fw/Image.gz) -lt 1000000 ] && echo "Image.gz too small!" && exit 1
           [ $(stat -c%s /tmp/fw/dtbo.img) -lt 1000000 ] && echo "dtbo.img too small!" && exit 1
 
-      - name: Repo Sync
-        working-directory: android_root
-        run: |
-          rm -rf .repo/projects/device/samsung/${{ github.event.inputs.device }}.git
-          rm -rf device/samsung/${{ github.event.inputs.device }}
-          repo sync -c -j$(nproc) --force-sync --no-clone-bundle --no-tags
 
       - name: Copy Firmware AFTER Sync
         working-directory: android_root
