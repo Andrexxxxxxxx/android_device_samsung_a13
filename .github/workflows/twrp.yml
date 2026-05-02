@@ -45,13 +45,14 @@ jobs:
         run: repo sync -c -j$(nproc) --force-sync --no-clone-bundle --no-tags
 
       - name: Build TWRP
-  run: |
-    export ALLOW_MISSING_DEPENDENCIES=true
-    export SKIP_VIRTUAL_AB_IMAGES=true
-    source build/envsetup.sh
-    lunch twrp_m13-eng
-    mka recoveryimage -j$(nproc)
-    
+        working-directory: android_root
+        run: |
+          export ALLOW_MISSING_DEPENDENCIES=true
+          export SKIP_VIRTUAL_AB_IMAGES=true
+          source build/envsetup.sh
+          lunch twrp_m13-eng
+          mka recoveryimage -j$(nproc)
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
