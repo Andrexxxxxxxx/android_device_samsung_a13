@@ -4,8 +4,8 @@
 
 TARGET_PREBUILT_KERNEL := device/samsung/m13/prebuilt/Image.gz
 BOARD_KERNEL_IMAGE_NAME := Image.gz
-#TARGET_PREBUILT_DTB := device/samsung/m13/prebuilt/dtb.img
-#BOARD_PREBUILT_DTBOIMAGE := device/samsung/m13/prebuilt/dtbo.img
+# TARGET_PREBUILT_DTB := device/samsung/m13/prebuilt/dtb.img
+# BOARD_PREBUILT_DTBOIMAGE := device/samsung/m13/prebuilt/dtbo.img
 TARGET_SPECIFIC_HEADER_PATH := device/samsung/m13/include
 
 # Platform
